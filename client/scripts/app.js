@@ -7,7 +7,7 @@ $(function() {
 //to all messages sent by the user
     server: 'http://127.0.0.1:3000/classes/',
     username: 'anonymous',
-    roomname: 'lobby',
+    roomname: 'Lobby',
     lastMessageDate: 0,
     friends: {},
     rooms: [],
@@ -42,7 +42,7 @@ $(function() {
 
       // POST the message to the server
       $.ajax({
-        url: app.server,
+        url: app.server + 'messages',
         type: 'POST',
         data: JSON.stringify(data),
         contentType: 'application/json',
@@ -59,10 +59,10 @@ $(function() {
     },
     fetch: function(animate) {
       $.ajax({
-        url: app.server,
+        url: app.server + 'messages',
         type: 'GET',
         contentType: 'application/json',
-        data: { order: '-createdAt'},
+        // data: { order: '-createdAt'},
         success: function(data) {
           console.log('chatterbox: Messages fetched');
           console.log(data);
@@ -78,7 +78,8 @@ $(function() {
           if (mostRecentMessage.createdAt > app.lastMessageDate || app.roomname !== displayedRoom) {
             console.log(data.results);
             // Update the UI with the fetched rooms
-            app.populateRooms(data.results);
+            //app.populateRooms(data.results);
+            app.getRooms();
 
             // Update the UI with the fetched messages
             app.populateMessages(data.results, animate);
@@ -119,19 +120,25 @@ $(function() {
     populateRooms: function(results) {
       app.$roomSelect.html('<option value="__newRoom">New room...</option><option value="" selected>Lobby</option></select>');
 
-      if (results) {
-        var rooms = {};
-        results.forEach(function(data) {
-          var roomname = data.roomname;
-          if (roomname && !rooms[roomname]) {
-            // Add the room to the select menu
-            app.addRoom(roomname);
+      // if (results) {
+      //   var rooms = {};
+      //   results.forEach(function(data) {
+      //     var roomname = data.roomname;
+      //     if (roomname && !rooms[roomname]) {
+      //       // Add the room to the select menu
+      //       app.addRoom(roomname);
 
-            // Store that we've added this room already
-            rooms[roomname] = true;
-          }
-        });
-      }
+      //       // Store that we've added this room already
+      //       rooms[roomname] = true;
+      //     }
+      //   });
+      // }
+      results.forEach(function(room){
+        if(app.rooms.indexOf(room) === -1){
+          app.rooms.push(room);
+          app.addRoom(room);
+        };
+      });
 
       // Select the menu option
       app.$roomSelect.val(app.roomname);
@@ -218,12 +225,13 @@ $(function() {
     },
     sendRoom: function(roomname) {
       $.ajax({
-        url: app.server + 'room',
+        url: app.server + 'rooms',
         type: 'POST',
         contentType: 'application/json',
         data: JSON.stringify(roomname),
         success: function(data) {
           console.log('SUCCESS: ' + data);
+          app.getRooms();
         },
         error: function(data) {
           console.log('FAILED: ' + data);
@@ -232,7 +240,7 @@ $(function() {
     },
     getRooms: function() {
       $.ajax({
-        url: app.server + 'room',
+        url: app.server + 'rooms',
         type: 'GET',
         contentType: 'application/json',
         success: function(data) {
@@ -243,7 +251,8 @@ $(function() {
           //     app.addRoom(room);
           //   }
           // });
-          app.populateRooms(data);
+          console.log(data.results);
+          app.populateRooms(data.results);
         },
         error: function(data){
           console.log('failed: ', data)

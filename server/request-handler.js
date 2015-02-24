@@ -11,8 +11,52 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
-var data = [{username: 'anonymous', text: ';asdkjfaldj'}];
+var messages = [{username: 'anonymous', text: ';asdkjfaldj'}];
 var rooms = ['Lobby'];
+
+
+var getRoot = function(request, response) {
+  response.write(JSON.stringify('hello'))
+};
+var getMessages = function(request, response){
+  response.write(JSON.stringify({'results': messages}));
+};
+var postMessage = function(request, response){
+  var str = '';
+  request.on('data', function(chunk) {
+    str += chunk;
+  });
+  request.on('end', function() {
+    messages.push(JSON.parse(str));
+  });
+  response.write(JSON.stringify('success'));
+};
+var getRooms = function(request, response){
+  response.write(JSON.stringify({'results': rooms}));
+};
+var postRoom = function(request, response){
+  var str = '';
+  request.on('data', function(chunk) {
+    str += chunk;
+  });
+  request.on('end', function() {
+    rooms.push(JSON.parse(str));
+  });
+  response.write(JSON.stringify('success'));
+};
+var router = {
+  "/": {
+    'GET': getRoot
+  },
+  "/classes/messages": {
+    "GET": getMessages,
+    "POST": postMessage
+  },
+  "/classes/rooms": {
+    "GET": getRooms,
+    "POST": postRoom
+  }
+};
 
 module.exports = function(request, response) {
   // Request and Response come from node's http module.
@@ -24,31 +68,50 @@ module.exports = function(request, response) {
   // Documentation for both request and response can be found in the HTTP section at
   // http://nodejs.org/documentation/api/
 
+  var statusCode;
+  var headers = defaultCorsHeaders;
+  headers['Content-Type'] = "application/json";
+
+  if (!router[request.url]) {
+    statusCode = 400;
+    response.writeHead(statusCode, headers);
+  } else if (request.method === 'OPTIONS') {
+    statusCode = 200;
+    headers['Allow'] = defaultCorsHeaders["access-control-allow-methods"];
+    response.writeHead(statusCode, headers);
+  } else {
+
+    statusCode = 200;
+    response.writeHead(statusCode, headers);
+
+    // route urls to actions
+    console.log("Serving request type " + request.method + " for url " + request.url);
+    router[request.url][request.method](request, response);
+  }
+
+  response.end();
+
+
   // Do some basic logging.
   //
   // Adding more logging to your server can be an easy way to get passive
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
-  console.log("Serving request type " + request.method + " for url " + request.url);
   // console.log(request.data);
 
-  var responseData;
+  // var responseData;
 
   // The outgoing status.
-  var statusCode = 200;
 
   // See the note below about CORS headers.
-  var headers = defaultCorsHeaders;
 
   // Tell the client we are sending them plain text.
   //
   // You will need to change this if you are sending something
   // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = "application/json";
 
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
-  response.writeHead(statusCode, headers);
 
   // Make sure to always call response.end() - Node may not send
   // anything back to the client until you do. The string you pass to
@@ -58,26 +121,26 @@ module.exports = function(request, response) {
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
 
-  if(request.method === 'POST'){
-    // console.log(request);
-    var str = '';
-    request.on('data', function(chunk) {
-      str += chunk;
-    });
-    request.on('end', function() {
-      data.push(JSON.parse(str));
-      headers['Content-Type'] = "text/plain";
-      response.writeHead(201, headers);
-      response.end('success!');
-    });
-    // responseData = 'success!';
-  }else if(request.method === 'GET'){
-    responseData = JSON.stringify({'results': data});
-    response.end(responseData);
-  }else if (request.method === 'OPTIONS') {
-    headers['Allow'] = defaultCorsHeaders["access-control-allow-methods"];
-    response.end(responseData);
-  }
+  // if(request.method === 'POST'){
+  //   // console.log(request);
+  //   var str = '';
+  //   request.on('data', function(chunk) {
+  //     str += chunk;
+  //   });
+  //   request.on('end', function() {
+  //     data.push(JSON.parse(str));
+  //     headers['Content-Type'] = "text/plain";
+  //     response.writeHead(201, headers);
+  //     response.end('success!');
+  //   });
+  //   // responseData = 'success!';
+  // }else if(request.method === 'GET'){
+  //   responseData = JSON.stringify({'results': data});
+  //   response.end(responseData);
+  // }else if (request.method === 'OPTIONS') {
+  //   headers['Allow'] = defaultCorsHeaders["access-control-allow-methods"];
+  //   response.end(responseData);
+  // }
 
   // console.log(responseData);
 };
