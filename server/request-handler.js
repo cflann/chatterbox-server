@@ -11,8 +11,14 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
+var data = [{username: 'anonymous', text: ';asdkjfaldj'}];
+var postData = function(d){
+  // console.log(d)
+  data.push(d);
+};
 
-var requestHandler = function(request, response) {
+
+module.exports = function(request, response) {
   // Request and Response come from node's http module.
   //
   // They include information about both the incoming request, such as
@@ -28,6 +34,9 @@ var requestHandler = function(request, response) {
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
   console.log("Serving request type " + request.method + " for url " + request.url);
+  // console.log(request.data);
+
+  var responseData;
 
   // The outgoing status.
   var statusCode = 200;
@@ -39,7 +48,7 @@ var requestHandler = function(request, response) {
   //
   // You will need to change this if you are sending something
   // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = "text/plain";
+  headers['Content-Type'] = "application/json";
 
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
@@ -52,7 +61,29 @@ var requestHandler = function(request, response) {
   //
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
-  response.end("Hello, World!");
+
+  if(request.method === 'POST'){
+    // console.log(request);
+    var str = '';
+    request.on('data', function(chunk) {
+      str += chunk;
+    });
+    request.on('end', function() {
+      postData(JSON.parse(str));
+        headers['Content-Type'] = "text/plain";
+      response.writeHead(201, headers);
+      response.end('success!');
+    });
+    // responseData = 'success!';
+  }else if(request.method === 'GET'){
+    responseData = JSON.stringify({'results': data});
+    response.end(responseData);
+  }else if (request.method === 'OPTIONS') {
+    headers['Allow'] = defaultCorsHeaders["access-control-allow-methods"];
+    response.end(responseData);
+  }
+
+  // console.log(responseData);
 };
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
