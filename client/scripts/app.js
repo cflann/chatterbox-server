@@ -5,11 +5,12 @@ $(function() {
   app = {
 //TODO: The current 'addFriend' function just adds the class 'friend'
 //to all messages sent by the user
-    server: 'http://127.0.0.1:3000/classes/chatterbox/',
+    server: 'http://127.0.0.1:3000/classes/',
     username: 'anonymous',
     roomname: 'lobby',
     lastMessageDate: 0,
     friends: {},
+    rooms: [],
 
     init: function() {
       // Get username
@@ -191,9 +192,13 @@ $(function() {
         if (roomname) {
           // Set as the current room
           app.roomname = roomname;
+          app.rooms.push(roomname);
 
           // Add the room to the menu
           app.addRoom(roomname);
+
+          // send new room to server
+          app.sendRoom(roomname);
 
           // Select the menu option
           app.$roomSelect.val(roomname);
@@ -210,6 +215,40 @@ $(function() {
         // Fetch messages again
         app.fetch();
       }
+    },
+    sendRoom: function(roomname) {
+      $.ajax({
+        url: app.server + 'room',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(roomname),
+        success: function(data) {
+          console.log('SUCCESS: ' + data);
+        },
+        error: function(data) {
+          console.log('FAILED: ' + data);
+        }
+      });
+    },
+    getRooms: function() {
+      $.ajax({
+        url: app.server + 'room',
+        type: 'GET',
+        contentType: 'application/json',
+        success: function(data) {
+          console.log(data);
+          // _.each(data,function(room){
+          //   if(app.rooms.indexOf(room) === -1){
+          //     app.rooms.push(room);
+          //     app.addRoom(room);
+          //   }
+          // });
+          app.populateRooms(data);
+        },
+        error: function(data){
+          console.log('failed: ', data)
+        }
+      });
     },
     handleSubmit: function(evt) {
       var message = {

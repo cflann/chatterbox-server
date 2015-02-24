@@ -12,11 +12,7 @@ this file and include it in basic-server.js so that it actually works.
 
 **************************************************************/
 var data = [{username: 'anonymous', text: ';asdkjfaldj'}];
-var postData = function(d){
-  // console.log(d)
-  data.push(d);
-};
-
+var rooms = ['Lobby'];
 
 module.exports = function(request, response) {
   // Request and Response come from node's http module.
@@ -69,8 +65,8 @@ module.exports = function(request, response) {
       str += chunk;
     });
     request.on('end', function() {
-      postData(JSON.parse(str));
-        headers['Content-Type'] = "text/plain";
+      data.push(JSON.parse(str));
+      headers['Content-Type'] = "text/plain";
       response.writeHead(201, headers);
       response.end('success!');
     });
