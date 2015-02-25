@@ -30,6 +30,7 @@ $(function() {
 
       // Fetch previous messages
       app.startSpinner();
+      app.initRooms();
       app.fetch(false);
 
       // Poll for new messages
@@ -52,7 +53,6 @@ $(function() {
           app.fetch();
         },
         error: function (data) {
-          console.log(data);
           console.error('chatterbox: Failed to send message');
         }
       });
@@ -65,7 +65,6 @@ $(function() {
         // data: { order: '-createdAt'},
         success: function(data) {
           console.log('chatterbox: Messages fetched');
-          console.log(data);
 
           // Don't bother if we have nothing to work with
           if (!data.results || !data.results.length) { return; }
@@ -76,7 +75,6 @@ $(function() {
           app.stopSpinner();
           // Only bother updating the DOM if we have a new message
           if (mostRecentMessage.createdAt > app.lastMessageDate || app.roomname !== displayedRoom) {
-            console.log(data.results);
             // Update the UI with the fetched rooms
             //app.populateRooms(data.results);
             app.getRooms();
@@ -117,22 +115,11 @@ $(function() {
         app.$chats.scrollTop(scrollTop);
       }
     },
+    initRooms: function() {
+      app.$roomSelect.html('<option value="__newRoom">New room...</option>');
+    },
     populateRooms: function(results) {
-      app.$roomSelect.html('<option value="__newRoom">New room...</option><option value="" selected>Lobby</option></select>');
 
-      // if (results) {
-      //   var rooms = {};
-      //   results.forEach(function(data) {
-      //     var roomname = data.roomname;
-      //     if (roomname && !rooms[roomname]) {
-      //       // Add the room to the select menu
-      //       app.addRoom(roomname);
-
-      //       // Store that we've added this room already
-      //       rooms[roomname] = true;
-      //     }
-      //   });
-      // }
       results.forEach(function(room){
         if(app.rooms.indexOf(room) === -1){
           app.rooms.push(room);
@@ -244,18 +231,10 @@ $(function() {
         type: 'GET',
         contentType: 'application/json',
         success: function(data) {
-          console.log(data);
-          // _.each(data,function(room){
-          //   if(app.rooms.indexOf(room) === -1){
-          //     app.rooms.push(room);
-          //     app.addRoom(room);
-          //   }
-          // });
-          console.log(data.results);
           app.populateRooms(data.results);
         },
         error: function(data){
-          console.log('failed: ', data)
+          console.log('failed to get rooms: ', data)
         }
       });
     },

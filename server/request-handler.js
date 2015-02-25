@@ -73,7 +73,7 @@ module.exports = function(request, response) {
   headers['Content-Type'] = "application/json";
 
   if (!router[request.url]) {
-    statusCode = 400;
+    statusCode = 404;
     response.writeHead(statusCode, headers);
   } else if (request.method === 'OPTIONS') {
     statusCode = 200;
@@ -96,10 +96,6 @@ module.exports = function(request, response) {
   //
   // Adding more logging to your server can be an easy way to get passive
   // debugging help, but you should always be careful about leaving stray
-  // console.logs in your code.
-  // console.log(request.data);
-
-  // var responseData;
 
   // The outgoing status.
 
@@ -121,28 +117,6 @@ module.exports = function(request, response) {
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
 
-  // if(request.method === 'POST'){
-  //   // console.log(request);
-  //   var str = '';
-  //   request.on('data', function(chunk) {
-  //     str += chunk;
-  //   });
-  //   request.on('end', function() {
-  //     data.push(JSON.parse(str));
-  //     headers['Content-Type'] = "text/plain";
-  //     response.writeHead(201, headers);
-  //     response.end('success!');
-  //   });
-  //   // responseData = 'success!';
-  // }else if(request.method === 'GET'){
-  //   responseData = JSON.stringify({'results': data});
-  //   response.end(responseData);
-  // }else if (request.method === 'OPTIONS') {
-  //   headers['Allow'] = defaultCorsHeaders["access-control-allow-methods"];
-  //   response.end(responseData);
-  // }
-
-  // console.log(responseData);
 };
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
